@@ -1,0 +1,16 @@
+package com.example.quan_ly_sinh_vien_v2.Config;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@Getter
+@Setter
+@ConfigurationProperties(prefix = "minio")
+public class MinioProperties {
+    private String url;
+    private String accessKey;
+    private String secretKey;
+    private String bucket;
+    private String publicUrl;
+}

@@ -1,0 +1,7 @@
+interface:
+  display_name: "GitHub"
+  short_description: "Commit va push code len GitHub tu mo ta ngan"
+  default_prompt: "Use $github to inspect current project changes, turn my short note into a commit message, commit the right files, and push the current branch to GitHub."
+
+policy:
+  allow_implicit_invocation: false
