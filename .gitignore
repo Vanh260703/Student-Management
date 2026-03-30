@@ -1,5 +1,9 @@
 HELP.md
 target/
+
+### Secrets — KHÔNG commit lên git ###
+.env
+
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

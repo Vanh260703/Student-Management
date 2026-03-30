@@ -28,11 +28,11 @@ public class HandleGlobalException {
     @ExceptionHandler(AuthenticationFailedException.class)
     public ResponseEntity<ErrorResponse> handleLogin(AuthenticationFailedException ex) {
         ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getMessage()
+                HttpStatus.NOT_FOUND.value(),
+                "Username or password is not correct"
         );
 
-        return ResponseEntity.status(400).body(error);
+        return ResponseEntity.status(404).body(error);
     }
 
     // Catch token expired

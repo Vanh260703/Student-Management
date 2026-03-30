@@ -18,7 +18,7 @@ public class UserInfoService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new NotFoundException("Người dùng không tồn tại!"));
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("Username or password is not correct"));
 
 
         return org.springframework.security.core.userdetails.User
