@@ -35,6 +35,7 @@ public class AdminDashboardController {
      * - Thống kê thông báo
      * - GPA trung bình, số sinh viên rớt
      */
+
     @GetMapping
     public ResponseEntity<?> getAdminDashboard() {
         AdminDashboardResponse dashboard = dashboardService.getAdminDashboard();

@@ -10,7 +10,6 @@ import com.example.quan_ly_sinh_vien_v2.Service.Auth.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,20 +30,12 @@ public class AuthController {
         AuthResponse authResponse = authService.login(request);
 
         // Add refresh token in cookie
-        Cookie refreshTokenCookie = new Cookie("refreshToken", authResponse.getRefreshToken());
-
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(false);
-        refreshTokenCookie.setPath("/api/v2/auth");
-        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60);
-
         response.addHeader(
                 "Set-Cookie",
                 "refreshToken=" + authResponse.getRefreshToken() +
                         "; Max-Age=604800" +
                         "; Path=/api/v2/" +
                         "; HttpOnly" +
-                        "; Secure" +
                         "; SameSite=Lax"
         );
 
@@ -67,7 +58,7 @@ public class AuthController {
 
         cookie.setMaxAge(0);
         cookie.setHttpOnly(true);
-        cookie.setPath("/v2/auth");
+        cookie.setPath("/api/v2/");
 
         response.addCookie(cookie);
 

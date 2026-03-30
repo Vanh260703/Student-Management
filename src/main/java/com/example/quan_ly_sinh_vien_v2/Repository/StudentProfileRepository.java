@@ -45,7 +45,7 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
         SELECT s FROM StudentProfile s 
         WHERE s.user.email = :username
     """)
-    Optional<StudentProfile> findStudentByEmail(@RequestParam("username") String username);
+    Optional<StudentProfile> findStudentByEmail(@Param("username") String username);
 
     Optional<StudentProfile> findByUserId(Long userId);
 }

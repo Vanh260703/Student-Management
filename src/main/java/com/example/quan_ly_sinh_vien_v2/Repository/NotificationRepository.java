@@ -23,4 +23,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     
     @Query("SELECT n FROM Notification n WHERE n.user = :user ORDER BY n.createdAt DESC")
     List<Notification> findAllByUserWithOrdering(@Param("user") User user);
+
+    long countByIsRead(Boolean isRead);
 }

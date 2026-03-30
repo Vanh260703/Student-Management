@@ -39,4 +39,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByStudentIdOrderByCreatedAtDesc(Long studentId);
 
     List<Payment> findByStudentIdAndStatusOrderByCreatedAtDesc(Long studentId, PaymentStatus status);
+
+    List<Payment> findByStudent(com.example.quan_ly_sinh_vien_v2.Modal.Entity.StudentProfile student);
 }

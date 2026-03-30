@@ -66,4 +66,6 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
             @Param("semesterId") Long semesterId,
             @Param("status") EnrollmentStatus status
     );
+
+    List<Enrollment> findByClassEntity(ClassEntity classEntity);
 }

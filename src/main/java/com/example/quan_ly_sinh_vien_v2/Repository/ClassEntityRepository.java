@@ -75,4 +75,7 @@ public interface ClassEntityRepository extends JpaRepository<ClassEntity, Long> 
             @Param("studentId") Long studentId
     );
 
+    long countByStatus(ClassStatus status);
+
+    List<ClassEntity> findByTeacher(TeacherProfile teacher);
 }

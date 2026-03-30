@@ -18,4 +18,5 @@ public interface TuitionFeeRepository extends JpaRepository<TuitionFee, Long> {
     List<TuitionFee> findByStudentIdOrderByCreatedAtDesc(Long studentId);
 
     List<TuitionFee> findByStudentIdAndSemesterIdOrderByCreatedAtDesc(Long studentId, Long semesterId);
+
 }

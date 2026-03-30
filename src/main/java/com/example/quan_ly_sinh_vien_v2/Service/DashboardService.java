@@ -12,6 +12,7 @@ import com.example.quan_ly_sinh_vien_v2.Repository.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -122,7 +123,7 @@ public class DashboardService {
         // Thống kê tài chính
         List<Payment> payments = paymentRepository.findAll();
         double totalCollected = payments.stream()
-                .filter(p -> p.getStatus() == PaymentStatus.PAID)
+                .filter(p -> p.getStatus() == PaymentStatus.SUCCESS)
                 .mapToDouble(Payment::getAmount)
                 .sum();
         double totalPending = payments.stream()
@@ -134,7 +135,7 @@ public class DashboardService {
         response.setTotalTuitionPending(totalPending);
         response.setTotalPaymentTransactions((long) payments.size());
         response.setTotalPaidPayments(payments.stream()
-                .filter(p -> p.getStatus() == PaymentStatus.PAID).count());
+                .filter(p -> p.getStatus() == PaymentStatus.SUCCESS).count());
         response.setTotalPendingPayments(payments.stream()
                 .filter(p -> p.getStatus() == PaymentStatus.PENDING).count());
 
@@ -183,9 +184,9 @@ public class DashboardService {
         TeacherDashboardResponse response = new TeacherDashboardResponse();
 
         // Thông tin giáo viên
-        response.setTeacherInfo(teacherService.getTeacherProfile(email));
+        response.setTeacherInfo(teacherService.getMyProfile(email));
         response.setDepartmentName(teacher.getDepartment() != null ? 
-                teacher.getDepartment().getDepartmentName() : "N/A");
+                teacher.getDepartment().getName() : "N/A");
 
         // Thống kê lớp học
         List<ClassEntity> classes = classEntityRepository.findByTeacher(teacher);
@@ -201,9 +202,15 @@ public class DashboardService {
         response.setTotalStudents(totalStudents);
 
         // Thống kê điểm
-        List<Grade> teacherGrades = classes.stream()
-                .flatMap(c -> gradeRepository.findAllByClassId(c.getId(), null).stream())
-                .collect(Collectors.toList());
+        List<Grade> teacherGrades = new ArrayList<>();
+        for (ClassEntity classEntity : classes) {
+            List<Grade> classGrades = gradeRepository.findAll().stream()
+                    .filter(g -> g.getEnrollment() != null && 
+                            g.getEnrollment().getClassEntity() != null &&
+                            g.getEnrollment().getClassEntity().getId().equals(classEntity.getId()))
+                    .collect(Collectors.toList());
+            teacherGrades.addAll(classGrades);
+        }
 
         response.setTotalGradesPosted((int) teacherGrades.stream()
                 .filter(Grade::getIsPublished)
@@ -220,7 +227,7 @@ public class DashboardService {
 
         // Thống kê điểm GPA
         Double avgGPA = teacherGrades.stream()
-                .mapToDouble(Grade::getNumericGrade)
+                .mapToDouble(Grade::getScore)
                 .average()
                 .orElse(0.0);
         response.setAverageClassGPA(avgGPA);
@@ -231,10 +238,10 @@ public class DashboardService {
                 .count();
         response.setTotalFailedStudents(failedStudents);
 
-        // Sinh viên xuất sắc (A+, A)
+        // Sinh viên xuất sắc (A, B)
         long excellentStudents = teacherGrades.stream()
-                .filter(g -> g.getLetterGrade() == LetterGrade.A_PLUS || 
-                        g.getLetterGrade() == LetterGrade.A)
+                .filter(g -> g.getLetterGrade() == LetterGrade.A || 
+                        g.getLetterGrade() == LetterGrade.B)
                 .count();
         response.setTotalExcellentStudents(excellentStudents);
 
@@ -280,11 +287,11 @@ public class DashboardService {
         StudentDashboardResponse response = new StudentDashboardResponse();
 
         // Thông tin sinh viên
-        response.setStudentInfo(studentService.getStudentProfile(email));
+        response.setStudentInfo(studentService.getProfile(email));
         response.setProgramName(student.getProgram() != null ? 
-                student.getProgram().getProgramName() : "N/A");
+                student.getProgram().getName() : "N/A");
         response.setDepartmentName(student.getDepartment() != null ? 
-                student.getDepartment().getDepartmentName() : "N/A");
+                student.getDepartment().getName() : "N/A");
         response.setEnrollmentYear(student.getEnrollmentYear());
 
         // Thống kê học tập
@@ -297,32 +304,50 @@ public class DashboardService {
                 student.getStatus().toString() : "ACTIVE");
 
         // Thống kê điểm số
-        List<Grade> studentGrades = enrollments.stream()
-                .flatMap(e -> gradeRepository.findByEnrollmentAndGradeComponent(e, null) != null ? 
-                        java.util.stream.Stream.of(gradeRepository.findByEnrollmentAndGradeComponent(e, null)) : 
-                        java.util.stream.Stream.empty())
-                .collect(Collectors.toList());
-
-        if (!studentGrades.isEmpty()) {
-            double avgScore = studentGrades.stream()
-                    .mapToDouble(Grade::getNumericGrade)
-                    .average()
-                    .orElse(0.0);
-            response.setAverageScore(avgScore);
-
-            long passedCount = studentGrades.stream()
-                    .filter(g -> g.getLetterGrade() != LetterGrade.F)
-                    .count();
-            response.setTotalPassedSubjects((int) passedCount);
-
-            long failedCount = studentGrades.stream()
-                    .filter(g -> g.getLetterGrade() == LetterGrade.F)
-                    .count();
-            response.setTotalFailedSubjects((int) failedCount);
+        List<Grade> studentGrades = new ArrayList<>();
+        for (Enrollment e : enrollments) {
+            // Lấy tất cả grades cho enrollment này
+            List<Grade> gradeList = gradeRepository.findAll().stream()
+                    .filter(g -> g.getEnrollment() != null && g.getEnrollment().getId().equals(e.getId()))
+                    .collect(Collectors.toList());
+            studentGrades.addAll(gradeList);
         }
 
+        double avgScore = 0.0;
+        int passedCount = 0;
+        int failedCount = 0;
+
+        if (!studentGrades.isEmpty()) {
+            avgScore = studentGrades.stream()
+                    .filter(g -> g.getScore() != null)
+                    .mapToDouble(Grade::getScore)
+                    .average()
+                    .orElse(0.0);
+
+            passedCount = (int) studentGrades.stream()
+                    .filter(g -> g.getLetterGrade() != LetterGrade.F)
+                    .count();
+
+            failedCount = (int) studentGrades.stream()
+                    .filter(g -> g.getLetterGrade() == LetterGrade.F)
+                    .count();
+        }
+
+        response.setAverageScore(avgScore);
+        response.setTotalPassedSubjects(passedCount);
+        response.setTotalFailedSubjects(failedCount);
+
         // Thống kê tham dự
-        List<Attendance> attendances = attendanceRepository.findByStudent(student);
+        List<Attendance> attendances = new ArrayList<>();
+        for (Enrollment enrollment : enrollments) {
+            List<Attendance> enrollmentAttendances = attendanceRepository.findAll();
+            for (Attendance att : enrollmentAttendances) {
+                if (att.getEnrollment() != null && att.getEnrollment().getId().equals(enrollment.getId())) {
+                    attendances.add(att);
+                }
+            }
+        }
+        
         if (!attendances.isEmpty()) {
             long presentDays = attendances.stream()
                     .filter(a -> a.getStatus() != null && 
@@ -339,15 +364,23 @@ public class DashboardService {
         }
 
         // Thông tin học phí
-        List<TuitionFee> tuitions = tuitionFeeRepository.findByStudent(student);
+        List<TuitionFee> tuitions = tuitionFeeRepository.findByStudentIdOrderByCreatedAtDesc(student.getId());
         double totalTuition = tuitions.stream()
                 .mapToDouble(TuitionFee::getAmount)
                 .sum();
         response.setTotalTuitionFee(totalTuition);
 
-        List<Payment> payments = paymentRepository.findByStudent(student);
+        // Lấy payments qua TuitionFees
+        List<Payment> payments = new ArrayList<>();
+        for (TuitionFee tuition : tuitions) {
+            List<Payment> tuitionPayments = paymentRepository.findAll().stream()
+                    .filter(p -> p.getTuitionFee() != null && p.getTuitionFee().getId().equals(tuition.getId()))
+                    .collect(Collectors.toList());
+            payments.addAll(tuitionPayments);
+        }
+
         double paidAmount = payments.stream()
-                .filter(p -> p.getStatus() == PaymentStatus.PAID)
+                .filter(p -> p.getStatus() == PaymentStatus.SUCCESS)
                 .mapToDouble(Payment::getAmount)
                 .sum();
         response.setPaidAmount(paidAmount);
@@ -362,4 +395,12 @@ public class DashboardService {
         return response;
     }
 }
+
+
+
+
+
+
+
+
 
