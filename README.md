@@ -1,14 +1,17 @@
-# Quản Lý Sinh Viên V2
+# 📚 Quản Lý Sinh Viên V2 - Student Management System
 
-## 📌 Giới Thiệu
+## 📌 Tổng Quan
 
-Hệ thống quản lý sinh viên toàn diện được xây dựng bằng **Spring Boot 4.0.3** với hỗ trợ:
-- ✅ Quản lý sinh viên, giáo viên, lớp học
-- ✅ Quản lý điểm số, lịch học
-- ✅ Hệ thống thông báo (Notification System)
-- ✅ Xác thực và phân quyền (Spring Security)
-- ✅ Cơ sở dữ liệu MySQL
-- ✅ API RESTful
+**Quan Lý Sinh Viên V2** là một hệ thống quản lý sinh viên toàn diện, xây dựng bằng **Spring Boot 4.0.3** với các tính năng quản lý học tập, tài chính, và hỗ trợ giáo viên, sinh viên, và quản trị viên.
+
+### Công Nghệ Sử Dụng
+- **Backend**: Spring Boot 4.0.3 (Java 17)
+- **Database**: MySQL 8.0+
+- **Authentication**: Spring Security + JWT
+- **Payment**: MoMo Payment Gateway
+- **Storage**: MinIO (Object Storage)
+- **Email**: Gmail SMTP
+- **Build Tool**: Maven
 
 ---
 
@@ -40,6 +43,40 @@ Hệ thống quản lý sinh viên toàn diện được xây dựng bằng **Sp
 - **Gửi thông báo hàng loạt (Broadcast)** theo vai trò
 - **Gửi thông báo cá nhân** cho người dùng cụ thể
 - Hỗ trợ các loại thông báo: GRADE, SCHEDULE, PAYMENT, SYSTEM, ATTENDANCE
+
+### 4. 📊 Dashboard Endpoints (Mới) ✨
+
+#### 4.1 Admin Dashboard
+**Endpoint**: `GET /api/v2/admin/dashboard`
+
+Cung cấp tổng quát **toàn bộ hệ thống**:
+- 👥 Thống kê người dùng (sinh viên, giáo viên, admin, hoạt động/không hoạt động)
+- 📚 Thống kê lớp học (tổng, mở, đóng, enrollments)
+- 🎓 Thống kê học tập (môn học, chương trình, bộ môn, kỳ học)
+- 💰 Thống kê tài chính (học phí thu/chưa thu, giao dịch)
+- 🔔 Thống kê thông báo
+- 📊 Thống kê nâng cao (GPA, sinh viên rớt)
+
+#### 4.2 Teacher Dashboard
+**Endpoint**: `GET /api/v2/teacher/dashboard`
+
+Cung cấp thông tin về **lớp học, sinh viên, điểm số** của giáo viên:
+- 👨‍🏫 Thông tin giáo viên, bộ môn
+- 📚 Tổng lớp dạy, sinh viên, danh sách lớp
+- 📝 Thống kê điểm (đã công bố, chưa công bố)
+- 👥 Thống kê sinh viên (GPA, rớt, xuất sắc)
+- 📊 Tham dự, lớp lớn nhất/nhỏ nhất
+
+#### 4.3 Student Dashboard
+**Endpoint**: `GET /api/v2/student/dashboard`
+
+Cung cấp thông tin **cá nhân, điểm số, lịch học, học phí** của sinh viên:
+- 👨‍🎓 Thông tin cá nhân, chương trình, bộ môn
+- 📚 Thống kê học tập (GPA, tín chỉ, trạng thái)
+- 📊 Điểm số gần đây, môn đạt/trượt
+- ✅ Tỷ lệ tham dự, vắng, muộn
+- 💰 Thông tin học phí (tổng, đã/còn lại, trạng thái)
+- 📅 Lịch học sắp tới
 
 ---
 
@@ -168,7 +205,131 @@ Authorization: Bearer <token>
 }
 ```
 
-#### Lấy chi tiết thông báo
+### 3. 📊 Dashboard Endpoints
+
+#### 3.1 Admin Dashboard
+**Endpoint**: `GET /api/v2/admin/dashboard`
+**Role Required**: ADMIN
+
+```http
+GET /api/v2/admin/dashboard
+Authorization: Bearer <token>
+```
+
+**Response**:
+```json
+{
+  "code": 200,
+  "message": "Get admin dashboard successfully!",
+  "result": {
+    "totalStudents": 150,
+    "totalTeachers": 20,
+    "totalAdmins": 3,
+    "totalActiveUsers": 170,
+    "totalInactiveUsers": 3,
+    "totalClasses": 45,
+    "totalOpenClasses": 30,
+    "totalClosedClasses": 15,
+    "totalEnrollments": 2500,
+    "totalSubjects": 80,
+    "totalPrograms": 5,
+    "totalDepartments": 8,
+    "totalSemesters": 3,
+    "totalTuitionCollected": 1500000000.0,
+    "totalTuitionPending": 300000000.0,
+    "totalPaymentTransactions": 2850,
+    "totalPaidPayments": 2100,
+    "totalPendingPayments": 750,
+    "totalNotificationsSent": 5420,
+    "totalUnreadNotifications": 234,
+    "averageStudentsPerClass": 55,
+    "averageGPA": 3.45,
+    "totalFailedGrades": 145,
+    "lastUpdated": "2026-03-29T14:30:00",
+    "systemStatus": "ONLINE"
+  }
+}
+```
+
+#### 3.2 Teacher Dashboard
+**Endpoint**: `GET /api/v2/teacher/dashboard`
+**Role Required**: TEACHER
+
+```http
+GET /api/v2/teacher/dashboard
+Authorization: Bearer <token>
+```
+
+**Response**:
+```json
+{
+  "code": 200,
+  "message": "Get teacher dashboard successfully!",
+  "result": {
+    "teacherInfo": { ... },
+    "totalClasses": 4,
+    "totalStudents": 180,
+    "classes": [ ... ],
+    "totalGradesPosted": 285,
+    "totalGradesPending": 42,
+    "totalEnrollments": 180,
+    "averageClassGPA": 3.52,
+    "totalFailedStudents": 8,
+    "totalExcellentStudents": 35,
+    "largestClassName": "IT101-01",
+    "largestClassSize": 48,
+    "smallestClassName": "IT104-01",
+    "smallestClassSize": 32,
+    "lastUpdated": "2026-03-29T14:30:00",
+    "departmentName": "Khoa Công Nghệ Thông Tin"
+  }
+}
+```
+
+#### 3.3 Student Dashboard
+**Endpoint**: `GET /api/v2/student/dashboard`
+**Role Required**: STUDENT
+
+```http
+GET /api/v2/student/dashboard
+Authorization: Bearer <token>
+```
+
+**Response**:
+```json
+{
+  "code": 200,
+  "message": "Get student dashboard successfully!",
+  "result": {
+    "studentInfo": { ... },
+    "programName": "Kỹ Sư Phần Mềm",
+    "departmentName": "Khoa Công Nghệ Thông Tin",
+    "enrollmentYear": 2021,
+    "totalEnrolledClasses": 6,
+    "totalCompletedCredits": 85,
+    "currentGPA": 3.65,
+    "studentStatus": "ACTIVE",
+    "averageScore": 7.85,
+    "totalPassedSubjects": 24,
+    "totalFailedSubjects": 1,
+    "recentGrades": [ ... ],
+    "attendanceRate": 92.5,
+    "totalAbsentDays": 2,
+    "totalLateArrivals": 3,
+    "totalTuitionFee": 10000000.0,
+    "paidAmount": 5000000.0,
+    "remainingAmount": 5000000.0,
+    "tuitionStatus": "PARTIAL",
+    "upcomingClasses": 3,
+    "nextClassName": "Lập Trình Nâng Cao",
+    "nextClassRoom": "A102",
+    "nextClassTime": "2026-03-30T10:00:00",
+    "lastUpdated": "2026-03-29T14:30:00"
+  }
+}
+```
+
+
 ```http
 GET /api/v2/notifications/{id}
 Authorization: Bearer <token>
@@ -258,18 +419,32 @@ quan-ly-sinh-vien-v2/
 │   ├── main/
 │   │   ├── java/com/example/quan_ly_sinh_vien_v2/
 │   │   │   ├── Controller/
-│   │   │   │   ├── NotificationController.java          ✨ (Mới)
-│   │   │   │   └── Admin/AdminNotificationController.java ✨ (Mới)
+│   │   │   │   ├── NotificationController.java              ✨ (Mới)
+│   │   │   │   ├── AdminDashboardController.java           ✨ (Mới)
+│   │   │   │   ├── TeacherDashboardController.java         ✨ (Mới)
+│   │   │   │   ├── StudentDashboardController.java         ✨ (Mới)
+│   │   │   │   └── Admin/AdminNotificationController.java  ✨ (Mới)
 │   │   │   ├── Service/
-│   │   │   │   └── NotificationService.java             ✨ (Mới)
+│   │   │   │   ├── NotificationService.java                ✨ (Mới)
+│   │   │   │   └── DashboardService.java                   ✨ (Mới)
 │   │   │   ├── DTO/
 │   │   │   │   ├── Request/Admin/
-│   │   │   │   │   ├── BroadcastNotificationRequest.java ✨ (Mới)
-│   │   │   │   │   └── SendNotificationRequest.java     ✨ (Mới)
+│   │   │   │   │   ├── BroadcastNotificationRequest.java   ✨ (Mới)
+│   │   │   │   │   └── SendNotificationRequest.java        ✨ (Mới)
 │   │   │   │   └── Response/
-│   │   │   │       └── NotificationResponse.java        ✨ (Mới)
+│   │   │   │       ├── NotificationResponse.java           ✨ (Mới)
+│   │   │   │       └── Dashboard/
+│   │   │   │           ├── AdminDashboardResponse.java     ✨ (Mới)
+│   │   │   │           ├── TeacherDashboardResponse.java   ✨ (Mới)
+│   │   │   │           └── StudentDashboardResponse.java   ✨ (Mới)
 │   │   │   ├── Repository/
-│   │   │   │   └── NotificationRepository.java
+│   │   │   │   ├── UserRepository.java                     ✏️ (Cập nhật)
+│   │   │   │   ├── ClassEntityRepository.java              ✏️ (Cập nhật)
+│   │   │   │   ├── NotificationRepository.java             ✏️ (Cập nhật)
+│   │   │   │   ├── PaymentRepository.java                  ✏️ (Cập nhật)
+│   │   │   │   ├── EnrollmentRepository.java               ✏️ (Cập nhật)
+│   │   │   │   ├── AttendanceRepository.java               ✏️ (Cập nhật)
+│   │   │   │   └── TuitionFeeRepository.java               ✏️ (Cập nhật)
 │   │   │   ├── Modal/ (Entities)
 │   │   │   ├── Security/
 │   │   │   ├── Config/
@@ -282,14 +457,20 @@ quan-ly-sinh-vien-v2/
 │   └── test/
 │       └── java/com/example/quan_ly_sinh_vien_v2/
 │           ├── Service/
-│           │   └── NotificationServiceTest.java        ✨ (Mới)
+│           │   └── NotificationServiceTest.java           ✨ (Mới)
 │           └── Controller/
-│               ├── NotificationControllerTest.java     ✨ (Mới)
+│               ├── NotificationControllerTest.java        ✨ (Mới)
 │               └── Admin/AdminNotificationControllerTest.java ✨ (Mới)
 ├── compose.yaml
 ├── pom.xml
-├── NOTIFICATION_ENDPOINT.md       ✨ (Mới)
-├── ADMIN_NOTIFICATION_ENDPOINT.md ✨ (Mới)
+├── NOTIFICATION_ENDPOINT.md            ✨ (Mới)
+├── ADMIN_NOTIFICATION_ENDPOINT.md      ✨ (Mới)
+├── ADMIN_DASHBOARD_ENDPOINT.md         ✨ (Mới)
+├── TEACHER_DASHBOARD_ENDPOINT.md       ✨ (Mới)
+├── STUDENT_DASHBOARD_ENDPOINT.md       ✨ (Mới)
+├── DASHBOARD_ENDPOINTS_SUMMARY.md      ✨ (Mới)
+├── DASHBOARD_USAGE_GUIDE.md            ✨ (Mới)
+└── README.md
 └── README.md
 ```
 
@@ -343,9 +524,14 @@ BUILD SUCCESS ✅
 
 ## 📖 Tài Liệu Chi Tiết
 
-- [Notification Endpoints](./NOTIFICATION_ENDPOINT.md) - Tài liệu chi tiết Notification API
-- [Admin Notification Endpoints](./ADMIN_NOTIFICATION_ENDPOINT.md) - Tài liệu chi tiết Admin API
-- [Authorization Security Update](./AUTHORIZATION_SECURITY_UPDATE.md) - Cập nhật bảo mật
+- [Notification Endpoints](./NOTIFICATION_ENDPOINT.md) - API Thông Báo cho Người Dùng
+- [Admin Notification Endpoints](./ADMIN_NOTIFICATION_ENDPOINT.md) - API Thông Báo cho Admin
+- [Admin Dashboard](./ADMIN_DASHBOARD_ENDPOINT.md) - Tổng quát Hệ Thống
+- [Teacher Dashboard](./TEACHER_DASHBOARD_ENDPOINT.md) - Dashboard Giáo Viên
+- [Student Dashboard](./STUDENT_DASHBOARD_ENDPOINT.md) - Dashboard Sinh Viên
+- [Dashboard Summary](./DASHBOARD_ENDPOINTS_SUMMARY.md) - Tóm tắt tất cả Dashboard
+- [Dashboard Usage Guide](./DASHBOARD_USAGE_GUIDE.md) - Hướng dẫn sử dụng
+- [Authorization Security Update](./AUTHORIZATION_SECURITY_UPDATE.md) - Cập nhật Bảo Mật
 
 ---
 
@@ -394,6 +580,7 @@ Dự án này được cấp phép dưới MIT License.
 #### ✨ Features
 - ✅ Notification system (user endpoints)
 - ✅ Admin notification system (broadcast & send)
+- ✅ **Dashboard Endpoints** (Admin, Teacher, Student) ⭐ NEW
 - ✅ Full test coverage (41 tests)
 - ✅ Security implementation
 - ✅ Comprehensive API documentation
@@ -401,12 +588,17 @@ Dự án này được cấp phép dưới MIT License.
 #### 📖 Documentation
 - NOTIFICATION_ENDPOINT.md
 - ADMIN_NOTIFICATION_ENDPOINT.md
+- **ADMIN_DASHBOARD_ENDPOINT.md** ⭐ NEW
+- **TEACHER_DASHBOARD_ENDPOINT.md** ⭐ NEW
+- **STUDENT_DASHBOARD_ENDPOINT.md** ⭐ NEW
+- **DASHBOARD_ENDPOINTS_SUMMARY.md** ⭐ NEW
+- **DASHBOARD_USAGE_GUIDE.md** ⭐ NEW
 - AUTHORIZATION_SECURITY_UPDATE.md
 - README.md
 
 ---
 
-**Last Updated**: March 28, 2026
+**Last Updated**: March 29, 2026
 
 ---
 
@@ -418,6 +610,8 @@ Các tính năng sắp tới:
 - [ ] SMS notifications
 - [ ] Push notifications
 - [ ] Notification preferences/settings
+- [ ] Dashboard caching optimization
+- [ ] Export dashboard data to PDF/Excel
 - [ ] Notification scheduling
 - [ ] Advanced notification filters
 
